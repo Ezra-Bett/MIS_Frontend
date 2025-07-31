@@ -1,60 +1,41 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "../utils/axiosConfig";
 
 function Register() {
     const [formData, setFormData] = useState({
-        username: '',
-        email: '',
-        password: ''
+        username: "",
+        email: "",
+        password: "",
     });
 
-    const [message, setMessage] = useState('');
+    const navigate = useNavigate();
 
-    const handleChange = e => {
+    const handleChange = (e) =>
         setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
 
-    const handleSubmit = async e => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://127.0.0.1:8000/api/register/', formData);
-            setMessage('Registration successful!');
-        } catch (error) {
-            setMessage('Registration failed: ' + (error.response?.data?.message || 'Try again.'));
+            // Backend will assign role = student by default
+            await axios.post("/api/register/", formData);
+            alert("Registration successful. Please log in.");
+            navigate("/login");
+        } catch (err) {
+            alert("Registration failed.");
         }
     };
 
     return (
-        <div className="card p-4">
+        <div className="your-custom-register-ui">
             <h2>Register</h2>
-            {message && <div className="alert alert-info">{message}</div>}
             <form onSubmit={handleSubmit}>
-                <input
-                    type="text"
-                    name="username"
-                    className="form-control my-2"
-                    placeholder="Username"
-                    value={formData.username}
-                    onChange={handleChange}
-                />
-                <input
-                    type="email"
-                    name="email"
-                    className="form-control my-2"
-                    placeholder="Email"
-                    value={formData.email}
-                    onChange={handleChange}
-                />
-                <input
-                    type="password"
-                    name="password"
-                    className="form-control my-2"
-                    placeholder="Password"
-                    value={formData.password}
-                    onChange={handleChange}
-                />
-                <button type="submit" className="btn btn-success">Register</button>
+                <input name="username" onChange={handleChange} />
+                <input name="email" onChange={handleChange} />
+                <input name="password" type="password" onChange={handleChange} />
+                <button type="submit">Register</button>
             </form>
+            <p>Already have an account? <a href="/login">Login</a></p>
         </div>
     );
 }

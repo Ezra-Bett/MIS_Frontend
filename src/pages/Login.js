@@ -1,54 +1,76 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';import { useNavigate } from 'react-router-dom';
 
-function Login() {
-    const [credentials, setCredentials] = useState({ username: '', password: '' });
-    const [message, setMessage] = useState('');
+const Login = () => {
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
     const navigate = useNavigate();
-
-    const handleChange = (e) => {
-        setCredentials({ ...credentials, [e.target.name]: e.target.value });
-    };
+    const BASE_URL = 'http://localhost:8000'; // Update if needed
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         try {
-            const res = await axios.post('http://127.0.0.1:8000/api/token/', credentials);
-            localStorage.setItem('access', res.data.access);
-            localStorage.setItem('refresh', res.data.refresh);
-            setMessage('Login successful!');
-            navigate('/dashboard');
-        } catch (err) {
-            setMessage('Invalid username or password');
+            const response = await axios.post(`${BASE_URL}/api/token/`, {
+                username,
+                password,
+            });
+
+            const token = response.data.access;
+            localStorage.setItem('token', token);
+
+            const decoded = jwtDecode(token);
+            const role = decoded.role;
+
+            console.log('Login successful. Role:', role);
+
+            // Redirect based on role
+            if (role === 'admin') {
+                navigate('/dashboard/admin');
+            } else if (role === 'teacher') {
+                navigate('/dashboard/teacher');
+            } else {
+                navigate('/dashboard/student');
+            }
+        } catch (error) {
+            console.error('Login failed:', error);
+            alert('Invalid username or password');
         }
     };
 
     return (
-        <div className="card p-4">
+        <div className="container mt-5">
             <h2>Login</h2>
-            {message && <div className="alert alert-info">{message}</div>}
-            <form onSubmit={handleSubmit}>
-                <input
-                    type="text"
-                    name="username"
-                    className="form-control my-2"
-                    placeholder="Username"
-                    value={credentials.username}
-                    onChange={handleChange}
-                />
-                <input
-                    type="password"
-                    name="password"
-                    className="form-control my-2"
-                    placeholder="Password"
-                    value={credentials.password}
-                    onChange={handleChange}
-                />
-                <button type="submit" className="btn btn-primary">Login</button>
+            <form onSubmit={handleSubmit} className="mt-4">
+                <div className="mb-3">
+                    <label htmlFor="username" className="form-label">Username</label>
+                    <input
+                        type="text"
+                        id="username"
+                        className="form-control"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        required
+                    />
+                </div>
+
+                <div className="mb-3">
+                    <label htmlFor="password" className="form-label">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        className="form-control"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+                </div>
+
+                <button type="submit" className="btn btn-primary w-100">Login</button>
             </form>
         </div>
     );
-}
+};
 
 export default Login;
